@@ -1,0 +1,254 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-pv-volume
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim
+  labels:
+    app: postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:9.6
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  type: NodePort
+  ports:
+   - port: 5432
+  selector:
+   app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail
+spec:
+  selector:
+    matchLabels:
+      app: mail
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mail
+    spec:
+      containers:
+        - name: mail
+          image: itsissa/namshi-smtp:4.89-2.deb9u5
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 25
+          env:
+          - name: PORT
+            value: "25"
+          - name: MAILNAME
+            value: TODO
+#     volumes:
+#      - ./files/dkim/config:/etc/exim4/_docker_additional_macros:ro
+#      - ./files/dkim/rsa.private:/etc/exim4/domain.key:ro
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail
+  labels:
+    app: mail
+spec:
+  type: NodePort
+  selector:
+   app: mail
+  ports:
+   - port: 25
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service
+spec:
+  selector:
+    matchLabels:
+      app: service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service
+    spec:
+      containers:
+        - name: service
+          ports:
+            - containerPort: 80
+            # TODO: 443
+          env:
+          - name: DOMAIN
+            value: TODO
+          command:
+            - "/wait-for-it.sh"
+            - "postgres:5432"
+            - "--"
+            - "./start-odk.sh"
+---
+  #   pyxform:
+  #   container_name: pyxform
+  #   image: 'getodk/pyxform-http:v1.0.0'
+  #    restart: always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enketo
+spec:
+  selector:
+    matchLabels:
+      app: enketo
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enketo
+    spec:
+      containers:
+        - name: enketo
+          ports:
+            - containerPort: 80
+            # TODO: 443
+          env:
+          - name: DOMAIN
+            value: TODO
+          - name: SYSADMIN_EMAIL
+            value: TODO
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enketo-redis-main
+  labels:
+    app: enketo-redis-main
+spec:
+  selector:
+    matchLabels:
+      app: enketo-redis-main
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enketo-redis-main
+    spec:
+      containers:
+      - name: master
+        image: redis:5
+        ports:
+        - containerPort: 6379
+        command:
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
+        volumeMounts:
+        - name: redisconfig
+          mountPath: /usr/local/etc/redis
+      volumes:
+        - name: redisconfig
+          configMap:
+            name: redis-enketo-main
+            items:
+            - key: redis.conf
+              path: redis.conf
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enketo-redis-cache
+  labels:
+    app: enketo-redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: enketo-redis-cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enketo-redis-cache
+    spec:
+      containers:
+      - name: master
+        image: redis:5
+        ports:
+        - containerPort: 6379
+        command:
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
+        volumeMounts:
+        - name: redisconfig
+          mountPath: /usr/local/etc/redis
+      volumes:
+        - name: redisconfig
+          configMap:
+            name: redis-enketo-cache
+            items:
+            - key: redis.conf
+              path: redis.conf
