@@ -1,20 +1,23 @@
 include Makefile.properties
 
 help:
-	@echo '                                                                                  '
-	@echo 'Makefile to build and deploy odk-central                                          '
-	@echo '                                                                                  '
-	@echo 'Usage:                                                                            '
-	@echo '   make git.pull                clones the odk-central git repository             '                                                
-	@echo '   make docker.build            builds the odk docker images                      '    
-	@echo '   make docker.push             pushes the odk docker images                      '   
-	@echo '   make k8s.deploy              deploys the odk app on kubernetes                 '    
-	@echo '   make k8s.teardown            cleans up the kubernetes cluster from odk         '    
-	@echo '   make backup.secrets          backups the secrets                               '
-	@echo '   make backup.secrets.restore  restores the secrets created with backup.secrets  '
-	@echo '   make monitoring.install      installs prometheus & grafana monitoring stack    '
-	@echo '   make monitoring.uninstall    uninstalls prometheus & grafana monitoring stack  '
-	@echo '                                                                                  '
+	@echo '                                                                                         '
+	@echo 'Makefile to build and deploy odk-central                                                 '
+	@echo '                                                                                         '
+	@echo 'Usage:                                                                                   '
+	@echo '   make git.pull                       clones the odk-central git repository             '                                                
+	@echo '   make docker.build                   builds the odk docker images                      '    
+	@echo '   make docker.push                    pushes the odk docker images                      '   
+	@echo '   make k8s.deploy                     deploys the odk app on kubernetes                 '    
+	@echo '   make k8s.teardown                   cleans up the kubernetes cluster from odk         '    
+	@echo '   make backup.secrets                 backups the secrets                               '
+	@echo '   make backup.secrets.restore         restores the secrets created with backup.secrets  '
+	@echo '   make monitoring.install             installs prometheus & grafana monitoring stack    '
+	@echo '   make monitoring.uninstall           uninstalls prometheus & grafana monitoring stack  '
+	@echo '   make dashboard.grafana.credentials  retrieves grafana credentials                     '
+	@echo '   make dashboard.grafana              launch grafana dashboard                          '
+	@echo '   make dashboard.prometheus           launch prometheus dashboard                       '     
+	@echo '                                                                                         '
 
 directories:
 	@echo creating tmp directory

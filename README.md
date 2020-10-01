@@ -21,13 +21,18 @@ $ make help
 Makefile to build and deploy odk-central                                          
                                                                                   
 Usage:                                                                            
-   make git.pull                clones the odk-central git repository
-   make docker.build            builds the odk docker images
-   make docker.push             pushes the odk docker images
-   make k8s.deploy              deploys the odk app on kubernetes
-   make k8s.teardown            cleans up the kubernetes cluster from odk
-   make backup.secrets          backups the secrets
-   make backup.secrets.restore  restores the secrets created with backup.secrets
+   make git.pull                       clones the odk-central git repository
+   make docker.build                   builds the odk docker images
+   make docker.push                    pushes the odk docker images
+   make k8s.deploy                     deploys the odk app on kubernetes
+   make k8s.teardown                   cleans up the kubernetes cluster from odk
+   make backup.secrets                 backups the secrets
+   make backup.secrets.restore         restores the secrets created with backup.secrets
+   make monitoring.install             installs prometheus & grafana monitoring stack
+   make monitoring.uninstall           uninstalls prometheus & grafana monitoring stack
+   make dashboard.grafana.credentials  retrieves grafana credentials
+   make dashboard.grafana              launch grafana dashboard
+   make dashboard.prometheus           launch prometheus dashboard
 ```
 # configuration
 
