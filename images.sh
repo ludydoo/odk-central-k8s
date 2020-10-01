@@ -6,7 +6,7 @@ cd $DIR/tmp
 
 if [ ! -d "$DIR/tmp/central" ] 
 then
-    git clone git@github.com:getodk/central.git
+    git clone git://github.com/getodk/central.git
 fi
 
 cd central
