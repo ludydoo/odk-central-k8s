@@ -86,12 +86,12 @@ k8s.deploy: git.pull
 	--from-file=redis.conf=tmp/central/files/enketo/redis-enketo-cache.conf
 
 	# apply manifests
-	cat app.yaml \
+	cat k8s/app.yaml \
 	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 
 k8s.teardown:
-	-kubectl delete -f app.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/app.yaml --namespace="$(NAMESPACE)"
 	-kubectl delete secret postgres --namespace="$(NAMESPACE)"
 	-kubectl delete secret postgres-odk --namespace="$(NAMESPACE)"
 	-kubectl delete secret enketo --namespace="$(NAMESPACE)"	
