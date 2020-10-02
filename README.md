@@ -79,7 +79,7 @@ export NAMESPACE ?= hello                   # The kubernetes namespace to deploy
 For now, the only backup available is for the secrets.
 
 ```
-make backup.secrets   # will create a ./backup directory with the secret manifests
+make backup.secrets          # will create a ./backup directory with the secret manifests
 make backup.secrets.restore  # will restore the backed up secrets
 ```
 
