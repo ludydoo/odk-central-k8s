@@ -1,4 +1,4 @@
-# odk-central-k8s : [OpenDataKit](https://opendatakit.org/) on Kubernetes.
+# odk-central-k8s : [OpenDataKit ODK Central](https://opendatakit.org/) on Kubernetes.
 
 `odk-central-k8s` helps with deploying [odk-central](https://github.com/getodk/central) to kubernetes.
 
