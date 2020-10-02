@@ -90,34 +90,34 @@ k8s.deploy: git.pull
 
 	# apply manifests
 	cat k8s/postgres.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/mail.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/service.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/pyxform.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/enketo.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/enketo-redis-main.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/enketo-redis-cache.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/ingress.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/odk-config.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 	cat k8s/init-db.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 
 k8s.teardown:

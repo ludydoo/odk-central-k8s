@@ -27,7 +27,7 @@ spec:
                 name: odk-config            
                 key: domain
           - name: SYSADMIN_EMAIL
-            value: TODO
+            value: ${SYSADMIN_EMAIL}
           volumeMounts:
           - name: odk-config
             mountPath: "/srv/src/enketo_express/config/config.json.template"
