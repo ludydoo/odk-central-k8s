@@ -1,6 +1,6 @@
-# odk-central-k8s
+# odk-central-k8s : [OpenDataKit](https://opendatakit.org/) on Kubernetes.
 
-`okd-central-k8s` helps with deploying [odk-central](https://github.com/getodk/central) to kubernetes.
+`odk-central-k8s` helps with deploying [odk-central](https://github.com/getodk/central) to kubernetes.
 
 # how it works
 
@@ -9,7 +9,7 @@ two images are built using the `make docker-build` command.
 
 The biggest part of the work that has been done is around creating `ConfigMaps` that will 
 take advantage of kubernetes `Secrets`. There is also a non-trivial `init-container` that
-initialises and creates the database for use by okd. 
+initialises and creates the database for use by `odk`. 
 
 Deploying the cluster with `make k8s.deploy` will create the necessary `Secrets` and `ConfigMaps`
 if they don't already exist. Then, some environment variables are piped through `envsubst` 
