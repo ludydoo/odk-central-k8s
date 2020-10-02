@@ -62,6 +62,27 @@ Usage:
    make dashboard.grafana              launch grafana dashboard
    make dashboard.prometheus           launch prometheus dashboard
 ```
+
+First `make docker.push` will create and push the docker images
+
+Then `make k8s.deploy` will deploy the app to your kubernetes cluster
+
+
+
+```
+EMAIL=test@example.com
+
+# Create a new user
+# https://docs.getodk.org/central-install-digital-ocean/#logging-into-odk-central
+
+kubectl exec -n hello $(kubectl get pods -n hello -o jsonpath={.items[].metadata.name} --selector=app=service) -- odk-cmd --email $EMAIL user-create
+
+# Promote user
+
+kubectl exec -n hello $(kubectl get pods -n hello -o jsonpath={.items[].metadata.name} --selector=app=service) -- odk-cmd --email $EMAIL user-promote
+
+```
+
 # configuration
 
 Edit `Makefile.properties` for available configuration
