@@ -178,7 +178,7 @@ spec:
                   key: password
       containers:
         - name: service
-          image: ${DOCKER_REGISTRY}/service:${IMAGE_VERSION} # TODO Change to public repo
+          image: ${DOCKER_REGISTRY}/service:${IMAGE_VERSION}
           ports:
             - containerPort: 8383
             # TODO: 443
@@ -279,7 +279,7 @@ spec:
     spec:
       containers:
         - name: enketo
-          image: ${DOCKER_REGISTRY}/enketo:${IMAGE_VERSION} # TODO Change to public repo
+          image: ${DOCKER_REGISTRY}/enketo:${IMAGE_VERSION} 
           ports:
             - containerPort: 8005
             # TODO: 443
