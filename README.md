@@ -36,7 +36,7 @@ Usage:
 ```
 # configuration
 
-Please edit `Makefile.properties` for available configuration
+Edit `Makefile.properties` for available configuration
 
 ```
 export DOMAIN ?= localhost              # The odk domain
