@@ -35,7 +35,7 @@ git.pull: directories
 docker.build: git.pull
 	cd tmp/central;	docker build -f enketo.dockerfile -t $(DOCKER_REGISTRY)/enketo:$(IMAGE_VERSION) . 
 	cd tmp/central; docker build -f service.dockerfile -t $(DOCKER_REGISTRY)/service:$(IMAGE_VERSION) . 
-	docker build -f docker/nginx.dockerfile -t $(DOCKER_REGISTRY)/frontend:$(IMAGE_VERSION) tmp/central 
+	docker build -f docker/frontend.dockerfile -t $(DOCKER_REGISTRY)/frontend:$(IMAGE_VERSION) tmp/central 
 
 docker.push: docker.build
 	docker push $(DOCKER_REGISTRY)/enketo:$(IMAGE_VERSION) 
