@@ -62,7 +62,8 @@ export NAMESPACE ?= hello                   # The kubernetes namespace to deploy
 |Service|mail|The `mail` service (port 25)|
 |Deployment|service| The `service` (odk) deployment (port 8383)|
 |Service|service| The `service` (odk) service (port 8383)|
-|Deployment|pyxform|The `pyxform` deployment|
+|Deployment|pyxform|The `pyxform` deployment (port 80)|
+|Service|pyxform|The `pyxform` service (port 80)|
 |Deployment|enketo|The `enketo` deployment (port 8005)|
 |Service|enketo|The `enketo` service (port 8005)|
 |Deployment|enketo-redis-main|The `enketo-redis-main` redis deployment (port 6379)|
