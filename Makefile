@@ -35,10 +35,12 @@ git.pull: directories
 docker.build: git.pull
 	cd tmp/central;	docker build -f enketo.dockerfile -t $(DOCKER_REGISTRY)/enketo:$(IMAGE_VERSION) . 
 	cd tmp/central; docker build -f service.dockerfile -t $(DOCKER_REGISTRY)/service:$(IMAGE_VERSION) . 
+	cd tmp/central; docker build -f nginx.dockerfile -t $(DOCKER_REGISTRY)/frontend:$(IMAGE_VERSION) . 
 
 docker.push: docker.build
 	docker push $(DOCKER_REGISTRY)/enketo:$(IMAGE_VERSION) 
 	docker push $(DOCKER_REGISTRY)/service:$(IMAGE_VERSION)
+	docker push $(DOCKER_REGISTRY)/frontend:$(IMAGE_VERSION)
 
 k8s.deploy: git.pull
 
@@ -89,48 +91,12 @@ k8s.deploy: git.pull
 	--from-file=redis.conf=tmp/central/files/enketo/redis-enketo-cache.conf
 
 	# apply manifests
-	cat k8s/postgres.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/mail.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/service.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/pyxform.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/enketo.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/enketo-redis-main.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/enketo-redis-cache.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/ingress.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/odk-config.yaml \
-	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
-	| kubectl apply --namespace="$(NAMESPACE)" -f -
-	cat k8s/init-db.yaml \
+	cat k8s/* \
 	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 
 k8s.teardown:
-	-kubectl delete -f k8s/init-db.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/odk-config.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/ingress.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/enketo-redis-cache.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/enketo-redis-main.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/enketo.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/pyxform.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/service.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/mail.yaml --namespace="$(NAMESPACE)"
-	-kubectl delete -f k8s/postgres.yaml --namespace="$(NAMESPACE)"
+	-cat k8s/* | kubectl delete --namespace="$(NAMESPACE)" -f -
 	-kubectl delete secret postgres --namespace="$(NAMESPACE)"
 	-kubectl delete secret postgres-odk --namespace="$(NAMESPACE)"
 	-kubectl delete secret enketo --namespace="$(NAMESPACE)"	
@@ -168,3 +134,9 @@ dashboard.grafana:
 dashboard.prometheus:
 	@echo Prometheus available at http://localhost:9090
 	@kubectl port-forward -n monitoring $$(kubectl -n monitoring get pod --selector app=prometheus -o jsonpath={.items[].metadata.name}) 9090:9090
+
+validate:
+	# test manifests
+	cat k8s/* \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE},$${SYSADMIN_EMAIL}' \
+	| kubectl apply --dry-run=client --namespace="$(NAMESPACE)" -f -
