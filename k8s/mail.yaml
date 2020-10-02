@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail
+spec:
+  selector:
+    matchLabels:
+      app: mail
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mail
+    spec:
+      containers:
+        - name: mail
+          image: itsissa/namshi-smtp:4.89-2.deb9u5
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 25
+          env:
+          - name: PORT
+            value: "25"
+          - name: MAILNAME
+            valueFrom:
+              configMapKeyRef:
+                name: odk-config            
+                key: domain
+#     volumes:
+#      - ./files/dkim/config:/etc/exim4/_docker_additional_macros:ro
+#      - ./files/dkim/rsa.private:/etc/exim4/domain.key:ro
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail
+  labels:
+    app: mail
+spec:
+  selector:
+   app: mail
+  ports:
+   - port: 25

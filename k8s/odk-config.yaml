@@ -1,0 +1,107 @@
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odk-config
+data:
+  domain: ${DOMAIN}
+  enketo-config.json: |
+    {
+        "app name": "Enketo",
+        "base path": "",
+        "encryption key": "${SECRET}",
+        "id length": 31,
+        "less secure encryption key": "${LESS_SECRET}",
+        "linked form and data server": {
+            "api key": "${API_KEY}",
+            "authentication": {
+                "type": "cookie",
+                "url": "https://${DOMAIN}/#/login?next={RETURNURL}"
+            },
+            "name": "ODK Central",
+            "server url": ""
+        },
+        "logo": {
+            "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+            "href": ""
+        },
+        "offline enabled": true,
+        "payload limit": "1mb",
+        "port": "8005",
+        "query parameter to pass to submission": "st",
+        "redis": {
+            "main": {
+                "host": "enketo-redis-main",
+                "port": "6379"
+            },
+            "cache": {
+                "host": "enketo-redis-cache",
+                "port": "6380"
+            }
+        },
+        "support": {
+            "email": "errors@getodk.org"
+        },
+        "text field character limit": 1000000
+    }
+  service-config.json: |
+    {
+      "default": {
+        "database": {
+          "host": "${DB_HOST}",
+          "user": "${DB_USER}",
+          "password": "${DB_PASSWORD}",
+          "database": "${DB_NAME}"
+        },
+        "email": {
+          "serviceAccount": "no-reply@${DOMAIN}",
+          "transport": "smtp",
+          "transportOpts": {
+            "host": "mail",
+            "port": 25
+          }
+        },
+        "xlsform": {
+          "host": "pyxform",
+          "port": 80
+        },
+        "enketo": {
+          "url": "http://enketo:8005/-",
+          "apiKey": "${ENKETO_API_KEY}"
+        },
+        "env": {
+          "domain": "https://${DOMAIN}"
+        },
+        "external": {
+          "sentry": {
+            "key": "3cf75f54983e473da6bd07daddf0d2ee",
+            "project": "1298632"
+          }
+        }
+      }
+    }
+  start-odk.sh: |
+    CONFIG_PATH=/usr/odk/config/local.json
+    echo "generating local service configuration.."
+    
+    /bin/bash -c "ENKETO_API_KEY=$(cat /etc/secrets/enketo-api-key) DB_USER=$(cat /etc/db-secrets/username) DB_PASSWORD=$(cat /etc/db-secrets/password) DB_NAME=$(cat /etc/db-secrets/db) DB_HOST=postgres.${NAMESPACE}.svc.cluster.local envsubst '\$DOMAIN:\$ENKETO_API_KEY,\$DB_NAME,\$DB_USER,\$DB_PASSWORD,\$DB_NAME,\$DB_HOST' < /usr/share/odk/config.json.template > $CONFIG_PATH"
+
+    echo "running migrations.."
+    node -e 'const { withDatabase, migrate } = require("./lib/model/database"); withDatabase(require("config").get("default.database"))(migrate);'
+
+    echo "starting cron.."
+    cron -f &
+
+    MEMTOT=$(vmstat -s | grep 'total memory' | awk '{ print $1 }')
+    if [ "$MEMTOT" -gt "1100000" ]
+    then
+      WORKER_COUNT=4
+    else
+      WORKER_COUNT=1
+    fi
+    echo "using $WORKER_COUNT worker(s) based on available memory ($MEMTOT).."
+
+    echo "starting server."
+    mkdir -p /var/log/odk
+    node node_modules/naught/lib/main.js start --remove-old-ipc true --worker-count $WORKER_COUNT --daemon-mode false --log /var/log/odk/naught.log --stdout /proc/1/fd/1 --stderr /proc/1/fd/2 lib/bin/run-server.js

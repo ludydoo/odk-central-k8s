@@ -1,0 +1,106 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service
+spec:
+  selector:
+    matchLabels:
+      app: service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service
+    spec:
+      initContainers:
+        - name: db-ready
+          image: postgres:9.6
+          volumeMounts:
+            - name: init-db
+              mountPath: /scripts
+          command: ["sh", "/scripts/init-db.sh"]
+          env:
+            - name: DB_HOST
+              value: postgres.${NAMESPACE}.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: password
+            - name: NEW_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-odk
+                  key: db
+            - name: NEW_DB_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-odk
+                  key: username
+            - name: NEW_DB_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-odk
+                  key: password
+      containers:
+        - name: service
+          image: ${DOCKER_REGISTRY}/service:${IMAGE_VERSION}
+          ports:
+            - containerPort: 8383
+            # TODO: 443
+          env:
+          - name: DOMAIN
+            valueFrom:
+              configMapKeyRef:
+                name: odk-config            
+                key: domain
+          - name: DB_HOST
+            value: postgres.${NAMESPACE}.svc.cluster.local
+          command: ["sh", "./start-odk.sh"]
+          volumeMounts:
+          - name: enketo-secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+          - name: db-secrets
+            mountPath: "/etc/db-secrets"
+            readOnly: true
+          - name: odk-config
+            mountPath: "/usr/share/odk/config.json.template"
+            subPath: service-config.json
+          - name: odk-config
+            mountPath: "/usr/odk/start-odk.sh"
+            subPath: start-odk.sh
+      volumes:
+        - name: init-db
+          configMap:
+            name: odk-init-db
+            defaultMode: 0755
+        - name: odk-config
+          configMap:
+            name: odk-config
+        - name: enketo-secrets
+          secret:
+            secretName: enketo
+        - name: db-secrets
+          secret:
+            secretName: postgres-odk
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+  labels:
+    app: service
+spec:
+  selector:
+   app: service
+  ports:
+   - port: 8383

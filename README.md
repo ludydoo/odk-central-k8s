@@ -2,11 +2,37 @@
 
 `okd-central-k8s` helps with deploying [odk-central](https://github.com/getodk/central) to kubernetes.
 
+# how it works
+
+I'm cloning the `getodk/central` repository in a tmp folder. I'm using their docker images mostly intact. They don't have a docker image for either the `service` or their `enketo`. So these
+two images are built using the `make docker-build` command. 
+
+The biggest part of the work that has been done is around creating `ConfigMaps` that will 
+take advantage of kubernetes `Secrets`. There is also a non-trivial `init-container` that
+initialises and creates the database for use by okd. 
+
+Deploying the cluster with `make k8s.deploy` will create the necessary `Secrets` and `ConfigMaps`
+if they don't already exist. Then, some environment variables are piped through `envsubst` 
+to a templated `k8s/app.yaml`, then applied using `kubectl`. 
+
+All the resources are namespaced. There could potentially be multiple deployments, using 
+different namespaces (configured in the `Makefile.properties`)
+
+# remains to be done
+
+- [ ] `enketo` sysadmin email
+- [ ] security, ssl certificates (through `cert-manager`). 
+- [ ] would be nice to have this behind a service mesh (istio) for tracing & monitoring
+- [ ] logging. But I'm not sure yet how to plug in ELK stack with this existing codebase.
+- [ ] automated database backup. I would prefer having the postgres db in a RDS database or some managed service with automated backup. 
+
 # prerequisites
 
 ```
 docker
 kubectl
+envsubst
+helm (v3)
 ```
 
 # how to use
@@ -82,4 +108,3 @@ For now, the only backup available is for the secrets.
 make backup.secrets          # will create a ./backup directory with the secret manifests
 make backup.secrets.restore  # will restore the backed up secrets
 ```
-

@@ -1,0 +1,103 @@
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odk-init-db
+data:
+  init-db.sh: |
+    #!/bin/bash
+
+    set -e
+
+    if test -f "$DB_PASSWORD_FILE"; then
+        DB_PASSWORD=$(cat "$DB_PASSWORD_FILE")
+    fi
+
+    if test -f "$NEW_DB_USER_PASSWORD_FILE"; then
+        NEW_DB_USER_PASSWORD=$(cat "$NEW_DB_USER_PASSWORD_FILE")
+    fi
+
+    echo "----------------------------------"
+    echo "DB_HOST:          $DB_HOST"
+    echo "DB_PORT:          $DB_PORT"
+    echo "DB_USER:          $DB_USER"
+    echo "NEW_DB_NAME:      $NEW_DB_NAME"
+    echo "NEW_DB_USER_NAME: $NEW_DB_USER_NAME"
+    echo "----------------------------------"
+
+    echo "----------------------------------"
+    echo "waiting on database to be ready..."
+    echo "----------------------------------"
+
+    set +e
+    TIMEOUT=60
+    COUNT=0
+    until PGPASSWORD=$DB_PASSWORD pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" || [ $COUNT -eq $TIMEOUT ];
+    do
+      echo "Waiting $COUNT/$TIMEOUT..."
+      sleep 1
+      COUNT=$((COUNT+1))
+    done
+    set -e
+
+    echo "----------------------------------"
+    echo "database is ready..."
+    echo "----------------------------------"
+
+
+    echo "----------------------------------"
+    echo "Running database initialization script"
+    echo "----------------------------------"
+
+    # creates user, database and grants privileges
+    PGPASSWORD=$DB_PASSWORD psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" <<-EOSQL
+
+      -- The dblink extension is necessary for the dblink_exec command
+      -- making sure that it is installed
+      CREATE EXTENSION IF NOT EXISTS dblink;
+
+      DO
+      \$\$
+      BEGIN
+
+        -- making sure the new user exists
+        -- https://stackoverflow.com/questions/8092086/create-postgresql-role-user-if-it-doesnt-exist
+
+        IF EXISTS (
+            SELECT FROM pg_catalog.pg_roles
+            WHERE  rolname = '$NEW_DB_USER_NAME') THEN
+            RAISE NOTICE 'user "$NEW_DB_USER_NAME" already exists, skipping.';
+        ELSE
+            CREATE USER $NEW_DB_USER_NAME WITH ENCRYPTED PASSWORD '$NEW_DB_USER_PASSWORD';
+        END IF;
+
+        -- making sure the new database exists
+        -- https://stackoverflow.com/questions/18389124/simulate-create-database-if-not-exists-for-postgresql
+
+        IF EXISTS (SELECT FROM pg_database WHERE datname = '$NEW_DB_NAME') THEN
+            RAISE NOTICE 'database "$NEW_DB_NAME" already exists, skipping.';
+        ELSE
+            PERFORM dblink_exec('dbname=' || current_database(), 'CREATE DATABASE $NEW_DB_NAME');
+        END IF;
+
+        -- granting all privileges on new database for new user
+        GRANT ALL PRIVILEGES ON DATABASE $NEW_DB_NAME TO $NEW_DB_USER_NAME;
+
+      END
+      \$\$;
+
+
+    EOSQL
+
+    # creates the necessary extension
+    PGPASSWORD=$DB_PASSWORD psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$NEW_DB_NAME" <<-EOSQL
+
+      CREATE EXTENSION IF NOT EXISTS CITEXT;
+      CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+    EOSQL
+
+    echo "----------------------------------"
+    echo "Success!"
+    echo "----------------------------------"

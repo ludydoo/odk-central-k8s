@@ -89,12 +89,48 @@ k8s.deploy: git.pull
 	--from-file=redis.conf=tmp/central/files/enketo/redis-enketo-cache.conf
 
 	# apply manifests
-	cat k8s/app.yaml \
+	cat k8s/postgres.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/mail.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/service.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/pyxform.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/enketo.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/enketo-redis-main.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/enketo-redis-cache.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/ingress.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/odk-config.yaml \
+	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
+	| kubectl apply --namespace="$(NAMESPACE)" -f -
+	cat k8s/init-db.yaml \
 	| envsubst '$${DOMAIN},$${DOCKER_REGISTRY},$${IMAGE_VERSION},$${NAMESPACE}' \
 	| kubectl apply --namespace="$(NAMESPACE)" -f -
 
 k8s.teardown:
-	-kubectl delete -f k8s/app.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/init-db.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/odk-config.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/ingress.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/enketo-redis-cache.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/enketo-redis-main.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/enketo.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/pyxform.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/service.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/mail.yaml --namespace="$(NAMESPACE)"
+	-kubectl delete -f k8s/postgres.yaml --namespace="$(NAMESPACE)"
 	-kubectl delete secret postgres --namespace="$(NAMESPACE)"
 	-kubectl delete secret postgres-odk --namespace="$(NAMESPACE)"
 	-kubectl delete secret enketo --namespace="$(NAMESPACE)"	

@@ -1,0 +1,50 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enketo
+spec:
+  selector:
+    matchLabels:
+      app: enketo
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enketo
+    spec:
+      containers:
+        - name: enketo
+          image: ${DOCKER_REGISTRY}/enketo:${IMAGE_VERSION} 
+          ports:
+            - containerPort: 8005
+            # TODO: 443
+          env:
+          - name: DOMAIN
+            valueFrom:
+              configMapKeyRef:
+                name: odk-config            
+                key: domain
+          - name: SYSADMIN_EMAIL
+            value: TODO
+          volumeMounts:
+          - name: odk-config
+            mountPath: "/srv/src/enketo_express/config/config.json.template"
+            subPath: enketo-config.json
+      volumes:
+        - name: odk-config
+          configMap:
+            name: odk-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: enketo
+  labels:
+    app: enketo
+spec:
+  selector:
+   app: enketo
+  ports:
+   - port: 8005
