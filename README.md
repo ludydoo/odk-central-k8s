@@ -71,15 +71,15 @@ Then `make k8s.deploy` will deploy the app to your kubernetes cluster
 
 ```
 EMAIL=test@example.com
+NAMESPACE=mynamespace
 
 # Create a new user
 # https://docs.getodk.org/central-install-digital-ocean/#logging-into-odk-central
 
-kubectl exec -n hello $(kubectl get pods -n hello -o jsonpath={.items[].metadata.name} --selector=app=service) -- odk-cmd --email $EMAIL user-create
+POD=$(kubectl get pods -n $NAMESPACE -o jsonpath={.items[].metadata.name} --selector=app=service)
 
-# Promote user
-
-kubectl exec -n hello $(kubectl get pods -n hello -o jsonpath={.items[].metadata.name} --selector=app=service) -- odk-cmd --email $EMAIL user-promote
+kubectl exec -i -n $NAMESPACE $POD -- odk-cmd --email $EMAIL user-create   # Create user
+kubectl exec -n $NAMESPACE $POD -- odk-cmd --email $EMAIL user-promote     # Promote user
 
 ```
 
