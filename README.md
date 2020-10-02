@@ -13,7 +13,7 @@ initialises and creates the database for use by okd.
 
 Deploying the cluster with `make k8s.deploy` will create the necessary `Secrets` and `ConfigMaps`
 if they don't already exist. Then, some environment variables are piped through `envsubst` 
-to a templated `k8s/app.yaml`, then applied using `kubectl`. 
+to a templated `k8s/*.yaml`, then applied using `kubectl`. 
 
 All the resources are namespaced. There could potentially be multiple deployments, using 
 different namespaces (configured in the `Makefile.properties`)
