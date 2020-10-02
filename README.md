@@ -4,28 +4,50 @@
 
 # how it works
 
-I'm cloning the `getodk/central` repository in a tmp folder. I'm using their docker images mostly intact. They don't have a docker image for either the `service` or their `enketo`. So these
+I'm cloning the `getodk/central` repository in a tmp folder. I'm using their docker images mostly intact. 
+They don't have a docker image for either the `service`, `frontend` or their `enketo`. So these
 two images are built using the `make docker-build` command. 
+
+The `nginx` service is dropped. I'm building a new image `frontend` which only contains the static
+assets. The `Ingress` takes care of routing. 
+
+```
+Kubernetes Ingress
+------------------
+/v[0-9] -> service
+/-      -> enketo
+default -> frontend
+```
 
 The biggest part of the work that has been done is around creating `ConfigMaps` that will 
 take advantage of kubernetes `Secrets`. There is also a non-trivial `init-container` that
 initialises and creates the database for use by `odk`. 
 
+For now, the postgres database uses a `hostPath` volume to store data. Of course this 
+has to be changed. 
+
 Deploying the cluster with `make k8s.deploy` will create the necessary `Secrets` and `ConfigMaps`
 if they don't already exist. Then, some environment variables are piped through `envsubst` 
-to a templated `k8s/*.yaml`, then applied using `kubectl`. 
+then to `k8s/*.yaml`, then applied using `kubectl`. 
 
 All the resources are namespaced. There could potentially be multiple deployments, using 
-different namespaces (configured in the `Makefile.properties`)
+different namespaces (configured in the `Makefile.properties`). Though, the `Ingress` resource
+would have to be updated to filter the request based on the `Host: <host>` request header. 
+
+Prometheus & grafana can be installed with `make monitoring:install`. The built-in dashboards
+will display basic information about cpu/memory/network usage.
 
 # remains to be done
 
-- [ ] security, ssl certificates (through `cert-manager`). 
-- [ ] would be nice to have this behind a service mesh (istio) for tracing & monitoring
+- [ ] security, ssl certificates
 - [ ] logging. But I'm not sure yet how to plug in ELK stack with this existing codebase.
 - [ ] automated database backup. I would prefer having the postgres db in a RDS database or some managed service with automated backup. 
 - [ ] verify mail sending
 - [ ] define prometheus alerts
+- [ ] postgres volume
+- [ ] ${HOST} in Ingress
+- [ ] mutual tls
+- [ ] tracing & logging. Better monitoring.
 
 # prerequisites
 
@@ -61,20 +83,22 @@ Usage:
    make dashboard.grafana.credentials  retrieves grafana credentials
    make dashboard.grafana              launch grafana dashboard
    make dashboard.prometheus           launch prometheus dashboard
+   make validate                       validates (dry-run) the manifest files
 ```
 
 First `make docker.push` will create and push the docker images
 
 Then `make k8s.deploy` will deploy the app to your kubernetes cluster
 
+## creating a user
 
+See [here](https://docs.getodk.org/central-install-digital-ocean/#logging-into-odk-central)
 
 ```
 EMAIL=test@example.com
 NAMESPACE=mynamespace
 
 # Create a new user
-# https://docs.getodk.org/central-install-digital-ocean/#logging-into-odk-central
 
 POD=$(kubectl get pods -n $NAMESPACE -o jsonpath={.items[].metadata.name} --selector=app=service)
 
@@ -88,7 +112,7 @@ kubectl exec -n $NAMESPACE $POD -- odk-cmd --email $EMAIL user-promote     # Pro
 Edit `Makefile.properties` for available configuration
 
 ```
-export DOMAIN ?= localhost                  # The odk domain
+export DOMAIN ?= localhost                  # The domain
 export DOCKER_REGISTRY ?= localhost:32000   # The docker registry
 export IMAGE_VERSION ?= latest              # The docker image version tag
 export NAMESPACE ?= hello                   # The kubernetes namespace to deploy into
