@@ -70,6 +70,7 @@ export DOMAIN ?= localhost                  # The odk domain
 export DOCKER_REGISTRY ?= localhost:32000   # The docker registry
 export IMAGE_VERSION ?= latest              # The docker image version tag
 export NAMESPACE ?= hello                   # The kubernetes namespace to deploy into
+export SYSADMIN_EMAIL ?= info@localhost.com # The enketo SYSADMIN email
 ```
 
 # k8s components overview
