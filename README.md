@@ -20,11 +20,12 @@ different namespaces (configured in the `Makefile.properties`)
 
 # remains to be done
 
-- [ ] `enketo` sysadmin email
 - [ ] security, ssl certificates (through `cert-manager`). 
 - [ ] would be nice to have this behind a service mesh (istio) for tracing & monitoring
 - [ ] logging. But I'm not sure yet how to plug in ELK stack with this existing codebase.
 - [ ] automated database backup. I would prefer having the postgres db in a RDS database or some managed service with automated backup. 
+- [ ] verify mail sending
+- [ ] define prometheus alerts
 
 # prerequisites
 
