@@ -30,10 +30,11 @@ different namespaces (configured in the `Makefile.properties`)
 # prerequisites
 
 ```
+make
 docker
 kubectl
 envsubst
-helm (v3)
+helm (v3) # to install monitoring extras
 ```
 
 # how to use
@@ -88,6 +89,8 @@ export SYSADMIN_EMAIL ?= info@localhost.com # The enketo SYSADMIN email
 |Service|postgres|The `postgres` service (port 5432)|
 |Deployment|mail|The `mail` server deployment (port 25)|
 |Service|mail|The `mail` service (port 25)|
+|Deployment|frontend| The `frontend` deployment (port 80)|
+|Service|frontend| The `frontend` service (port 80)|
 |Deployment|service| The `service` (odk) deployment (port 8383)|
 |Service|service| The `service` (odk) service (port 8383)|
 |Deployment|pyxform|The `pyxform` deployment (port 80)|
@@ -98,7 +101,7 @@ export SYSADMIN_EMAIL ?= info@localhost.com # The enketo SYSADMIN email
 |Service|enketo-redis-main|The `enketo-redis-main` redis service (port 6379)|
 |Deployment|enketo-redis-cache|The `enketo-redis-cache` redis deployment (port 6380)|
 |Service|enketo-redis-cache|The `enketo-redis-cache` redis service  (port 6380)|
-|Ingress|odk-ingress|The ingress to the cluster|
+|Ingress|odk-ingress|The ingress to the cluster. <br> Routes `/-` to `enketo`<br>Routes `^v[0-9]` to `odk`<br>Routes the rest to `frontend`|
 |ConfigMap|odk-config|Contains configuration overrides for `enketo` and `odk` server. Notably, adds a few `envsubst` variables to the json configurations. The `odk` server has a slightly tweaked start script to pass these env variables to `envsubst`. |
 |ConfigMap|odk-config|Script to create and configure the `odk` database|
 
