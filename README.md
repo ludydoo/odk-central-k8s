@@ -40,8 +40,8 @@ Edit `Makefile.properties` for available configuration
 
 ```
 export DOMAIN ?= localhost              # The odk domain
-DOCKER_REGISTRY ?= localhost:32000      # The docker registry
-IMAGE_VERSION ?= latest                 # The docker image version tag
+export DOCKER_REGISTRY ?= localhost:32000      # The docker registry
+export IMAGE_VERSION ?= latest                 # The docker image version tag
 export NAMESPACE ?= hello               # The kubernetes namespace to deploy into
 ```
 
